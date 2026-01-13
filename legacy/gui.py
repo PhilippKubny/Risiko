@@ -217,7 +217,7 @@ def draw_top_bar(screen, font, env: RiskEnv, episode: int, lila_wins: int, games
     rect.right = WINDOW_WIDTH - 10
     screen.blit(surf_r, rect)
 
-def draw_bottom_bar(screen, font, env: RiskEnv):
+def draw_bottom_bar(screen, font, env: RiskEnv, model_player: str):
     pygame.draw.rect(
         screen,
         BOTTOM_BAR_COLOR,
@@ -225,9 +225,12 @@ def draw_bottom_bar(screen, font, env: RiskEnv):
     )
 
     stats = compute_stats(env)
+    random_player = next(name for name in env.players if name != model_player)
     text = (
-        f"Lila: {stats.get('Lila_troops', 0)} troops, {stats.get('Lila_terr', 0)} terrs   |   "
-        f"Rot: {stats.get('Rot_troops', 0)} troops, {stats.get('Rot_terr', 0)} terrs"
+        f"Model ({model_player}): {stats.get(f'{model_player}_troops', 0)} troops, "
+        f"{stats.get(f'{model_player}_terr', 0)} terrs   |   "
+        f"Random ({random_player}): {stats.get(f'{random_player}_troops', 0)} troops, "
+        f"{stats.get(f'{random_player}_terr', 0)} terrs"
     )
     surf = font.render(text, True, TEXT_COLOR)
     rect = surf.get_rect()
@@ -333,10 +336,20 @@ def draw_world(screen, small_font, env: RiskEnv):
 # Haupt-Loop
 # ---------------------------------------------------------
 
+def check_conquest_winner(env: RiskEnv) -> str | None:
+    s = env.state
+    if s is None:
+        return None
+    for name in env.players:
+        pid = env.players.index(name)
+        if np.all(s.owners == pid):
+            return name
+    return None
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Risk GUI: Lila (NN+MCTS) vs Rot (Random)")
+    pygame.display.set_caption("Risk GUI: Model vs Random")
     clock = pygame.time.Clock()
 
     font = pygame.font.SysFont("arial", 26)
@@ -356,6 +369,10 @@ def main():
         env = RiskEnv(max_steps=1000)
         obs, info = env.reset()
         done = False
+        model_player = random.choice(env.players)
+        pygame.display.set_caption(
+            f"Risk GUI: Model ({model_player}) vs Random"
+        )
 
         # Startaufstellung 3s
         start_show_ms = 3000
@@ -369,7 +386,7 @@ def main():
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
             draw_top_bar(screen, font, env, episode, lila_wins, games_played)
-            draw_bottom_bar(screen, font, env)
+            draw_bottom_bar(screen, font, env, model_player)
             pygame.display.flip()
             clock.tick(FPS)
 
@@ -386,17 +403,22 @@ def main():
             assert s is not None
             current_player = env.players[s.current_player_idx]
 
-            if current_player == env.lila_name:
+            if current_player == model_player:
                 action = choose_action_nn(env, net, n_simulations=4, device=device)
             else:
                 action = choose_action_random(env)
 
             obs, reward, done, info = env.step(action)
+            if not done:
+                conquest_winner = check_conquest_winner(env)
+                if conquest_winner is not None:
+                    done = True
+                    info["winner"] = conquest_winner
 
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
             draw_top_bar(screen, font, env, episode, lila_wins, games_played)
-            draw_bottom_bar(screen, font, env)
+            draw_bottom_bar(screen, font, env, model_player)
             pygame.display.flip()
             clock.tick(FPS)
 
@@ -416,7 +438,7 @@ def main():
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
             draw_top_bar(screen, font, env, episode, lila_wins, games_played)
-            draw_bottom_bar(screen, font, env)
+            draw_bottom_bar(screen, font, env, model_player)
 
             winner_text = f"Winner: {winner}" if winner is not None else "Winner: None"
             surf_w = font.render(winner_text, True, TEXT_COLOR)
