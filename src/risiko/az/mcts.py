@@ -104,7 +104,7 @@ def _expand(
         policy = legal_mask / legal_mask.sum()
     else:
         policy = policy / policy.sum()
-    value = float(output.value.squeeze(0).cpu().numpy())
+    value = output.value.squeeze().item()
     node = Node(
         state=state.clone(),
         prior=policy,
