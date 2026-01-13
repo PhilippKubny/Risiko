@@ -38,6 +38,13 @@ Run self-play to generate data:
 python scripts/run_self_play.py --games 4 --output data/self_play.jsonl
 ```
 
+Control which players act randomly during self-play:
+
+```bash
+# Use random players 0 and 1 (0-based indices), or "all".
+python scripts/run_self_play.py --random-players 0,1
+```
+
 Run the live GUI viewer (random policy for now):
 
 ```bash
@@ -54,7 +61,13 @@ python scripts/run_gui.py --players ai,random --delay 0.6
 Load a trained model for AI players:
 
 ```bash
-python scripts/run_gui.py --players ai,random --model checkpoints/policy_value.pt
+python scripts/run_gui.py --players ai,random --model data/model.pt
+```
+
+Tune GUI runtime options:
+
+```bash
+python scripts/run_gui.py --auto-reset --seed 7 --mcts-sims 128 --mcts-cpuct 1.2
 ```
 
 Hotkeys while the GUI is running:
@@ -70,7 +83,7 @@ Hotkeys while the GUI is running:
 Train a small model on the generated data:
 
 ```bash
-python scripts/train.py --data data/self_play.jsonl --epochs 3
+python scripts/train.py --data data/self_play.jsonl --epochs 3 --output data/model.pt
 ```
 
 ## Design notes

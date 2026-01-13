@@ -220,7 +220,11 @@ def main() -> None:
     if "ai" in player_kinds:
         network = build_network(env.num_players, action_space.size)
         if args.model:
-            state_dict = torch.load(args.model, map_location="cpu")
+            checkpoint = torch.load(args.model, map_location="cpu")
+            if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
+                state_dict = checkpoint["state_dict"]
+            else:
+                state_dict = checkpoint
             network.load_state_dict(state_dict)
         network.eval()
 
