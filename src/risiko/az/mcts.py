@@ -119,6 +119,7 @@ def _select_action(node: Node, c_puct: float) -> int:
     q = node.q_values()
     u = c_puct * node.prior * np.sqrt(total_visits) / (1.0 + node.visit_count)
     scores = q + u
+    scores = np.where(node.prior > 0, scores, -np.inf)
     return int(np.argmax(scores))
 
 
