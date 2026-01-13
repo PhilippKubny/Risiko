@@ -38,6 +38,12 @@ Run self-play to generate data:
 python scripts/run_self_play.py --games 4 --output data/self_play.jsonl
 ```
 
+Run the live GUI viewer (random policy for now, uses built-in Tkinter):
+
+```bash
+python scripts/run_gui.py --delay 0.8
+```
+
 Train a small model on the generated data:
 
 ```bash
