@@ -45,59 +45,59 @@ TERR_RADIUS = 26
 
 TERR_POS: Dict[int, Tuple[int, int]] = {
     # Nordamerika (0–8)
-    0: (140, 220),  # Alaska
-    1: (250, 210),  # Nordwest-Territorium
-    2: (410, 150),  # Grönland
-    3: (230, 280),  # Alberta
-    4: (320, 270),  # Ontario
-    5: (430, 260),  # Quebec
-    6: (230, 345),  # Weststaaten
-    7: (320, 345),  # Oststaaten
-    8: (280, 430),  # Mittelamerika
+    0: (125, 210),  # Alaska
+    1: (255, 200),  # Nordwest-Territorium
+    2: (430, 145),  # Grönland
+    3: (230, 285),  # Alberta
+    4: (330, 280),  # Ontario
+    5: (450, 275),  # Quebec
+    6: (230, 360),  # Weststaaten
+    7: (335, 355),  # Oststaaten
+    8: (295, 440),  # Mittelamerika
 
     # Südamerika (9–12)
-    9:  (330, 520),  # Venezuela
-    10: (330, 595),  # Peru
-    11: (420, 580),  # Brasilien
-    12: (355, 670),  # Argentinien
+    9:  (340, 520),  # Venezuela
+    10: (335, 600),  # Peru
+    11: (440, 585),  # Brasilien
+    12: (365, 685),  # Argentinien
 
     # Europa (13–19)
-    13: (560, 190),  # Island
-    14: (620, 270),  # Großbritannien
-    15: (700, 220),  # Skandinavien
-    16: (640, 335),  # Westeuropa
-    17: (690, 280),  # Mitteleuropa
-    18: (735, 360),  # Südeuropa
-    19: (820, 300),  # Ukraine
+    13: (560, 180),  # Island
+    14: (610, 275),  # Großbritannien
+    15: (710, 215),  # Skandinavien
+    16: (620, 345),  # Westeuropa
+    17: (700, 290),  # Mitteleuropa
+    18: (745, 370),  # Südeuropa
+    19: (840, 300),  # Ukraine
 
     # Afrika (20–25)
-    20: (660, 480),  # Nordafrika
-    21: (755, 450),  # Ägypten
-    22: (835, 525),  # Ostafrika
-    23: (690, 565),  # Zentralafrika
-    24: (720, 655),  # Südafrika
-    25: (880, 635),  # Madagaskar
+    20: (660, 485),  # Nordafrika
+    21: (760, 450),  # Ägypten
+    22: (850, 530),  # Ostafrika
+    23: (700, 575),  # Zentralafrika
+    24: (730, 665),  # Südafrika
+    25: (900, 640),  # Madagaskar
 
     # Asien (26–37)
-    26: (915, 260),  # Ural
-    27: (1015, 230), # Sibirien
-    28: (1120, 170), # Jakutien
-    29: (1210, 230), # Irkutsk
-    30: (1320, 240), # Kamtschatka
+    26: (900, 255),  # Ural
+    27: (1010, 215), # Sibirien
+    28: (1135, 160), # Jakutien
+    29: (1225, 225), # Irkutsk
+    30: (1355, 235), # Kamtschatka
 
-    31: (1130, 310), # Mongolei
-    32: (1320, 320), # Japan
-    33: (1030, 330), # China
-    34: (900, 390),  # Mittlerer Osten
-    35: (1000, 400), # Indien
-    36: (1110, 420), # Siam
-    37: (930, 320),  # Afghanistan
+    31: (1145, 305), # Mongolei
+    32: (1350, 320), # Japan
+    33: (1045, 345), # China
+    34: (900, 400),  # Mittlerer Osten
+    35: (1010, 410), # Indien
+    36: (1125, 435), # Siam
+    37: (930, 330),  # Afghanistan
 
     # Australien (38–41)
-    38: (1030, 560), # Indonesien
-    39: (1150, 550), # Neu-Guinea
-    40: (1070, 660), # West-Australien
-    41: (1190, 670), # Ost-Australien
+    38: (1035, 565), # Indonesien
+    39: (1160, 555), # Neu-Guinea
+    40: (1075, 670), # West-Australien
+    41: (1205, 680), # Ost-Australien
 }
 
 # ---------------------------------------------------------
@@ -258,9 +258,9 @@ def draw_wrap_edge(surface, color, alaska_pos, kam_pos, width=2):
     ax, ay = alaska_pos
     kx, ky = kam_pos
     mid_y = (ay + ky) // 2
-
-    pygame.draw.line(surface, color, (ax, ay), (0, mid_y), width)
-    pygame.draw.line(surface, color, (WINDOW_WIDTH, mid_y), (kx, ky), width)
+    margin = 50
+    pygame.draw.line(surface, color, (ax, ay), (-margin, mid_y), width)
+    pygame.draw.line(surface, color, (WINDOW_WIDTH + margin, mid_y), (kx, ky), width)
 
 def draw_world(screen, small_font, env: RiskEnv):
     s = env.state
