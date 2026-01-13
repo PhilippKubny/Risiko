@@ -17,6 +17,9 @@ dependencies = [
 train = [
   "tqdm>=4.66",
 ]
+gui = [
+  "pygame>=2.5",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
