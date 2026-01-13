@@ -54,6 +54,24 @@ TERRITORIES = [
     Territory(41, "Ost-Australien"),
 ]
 
+CONTINENTS = {
+    "Nordamerika": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+    "Suedamerika": [9, 10, 11, 12],
+    "Europa": [13, 14, 15, 16, 17, 18, 19],
+    "Afrika": [20, 21, 22, 23, 24, 25],
+    "Asien": [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37],
+    "Australien": [38, 39, 40, 41],
+}
+
+CONTINENT_BONUSES = {
+    "Nordamerika": 5,
+    "Suedamerika": 2,
+    "Europa": 5,
+    "Afrika": 3,
+    "Asien": 7,
+    "Australien": 2,
+}
+
 ADJACENCY = {
     0: (1, 3, 30),
     1: (0, 2, 3, 4),

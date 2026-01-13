@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 
-from .map import TERRITORIES
+from .map import CONTINENT_BONUSES, CONTINENTS, TERRITORIES
 
 
 PHASES = ("reinforce", "attack", "fortify")
@@ -52,4 +52,9 @@ def count_territories(owners: np.ndarray, player: int) -> int:
 
 def calculate_reinforcements(owners: np.ndarray, player: int) -> int:
     owned = count_territories(owners, player)
-    return max(3, owned // 3)
+    base = max(3, owned // 3)
+    bonus = 0
+    for continent, territories in CONTINENTS.items():
+        if np.all(owners[territories] == player):
+            bonus += CONTINENT_BONUSES[continent]
+    return base + bonus

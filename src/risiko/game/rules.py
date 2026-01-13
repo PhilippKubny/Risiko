@@ -105,16 +105,32 @@ def _advance_phase(state: GameState, num_players: int) -> None:
 def _resolve_attack(
     state: GameState, from_id: int, to_id: int, rng: np.random.Generator
 ) -> float:
-    attack_strength = state.troops[from_id]
-    defend_strength = state.troops[to_id]
-    prob_win = attack_strength / (attack_strength + defend_strength)
-    if rng.random() < prob_win:
+    attack_dice = min(3, state.troops[from_id] - 1)
+    defend_dice = min(2, state.troops[to_id])
+    attack_rolls = rng.integers(1, 7, size=attack_dice)
+    defend_rolls = rng.integers(1, 7, size=defend_dice)
+    attack_rolls.sort()
+    defend_rolls.sort()
+
+    attacker_losses = 0
+    defender_losses = 0
+    for attack_die, defend_die in zip(attack_rolls[::-1], defend_rolls[::-1]):
+        if attack_die > defend_die:
+            state.troops[to_id] -= 1
+            defender_losses += 1
+        else:
+            state.troops[from_id] -= 1
+            attacker_losses += 1
+
+    if state.troops[to_id] <= 0:
         state.owners[to_id] = state.current_player
         state.troops[from_id] -= 1
         state.troops[to_id] = 1
         return 0.25
-    state.troops[from_id] -= 1
-    return -0.1
+
+    if attacker_losses > 0 and defender_losses == 0:
+        return -0.1
+    return 0.0
 
 
 def _check_winner(state: GameState, num_players: int) -> int | None:
