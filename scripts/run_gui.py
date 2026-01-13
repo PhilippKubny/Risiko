@@ -25,6 +25,12 @@ PLAYER_COLORS = [
     (60, 179, 113),
     (218, 165, 32),
 ]
+PLAYER_COLOR_NAMES = [
+    "Rot",
+    "Blau",
+    "Grün",
+    "Gold",
+]
 
 
 def build_positions() -> Dict[int, Tuple[int, int]]:
@@ -89,6 +95,7 @@ def draw_state(
     last_action: str,
     paused: bool,
     player_labels: List[str],
+    player_color_names: List[str],
 ) -> None:
     screen.fill(BACKGROUND_COLOR)
     pygame.draw.rect(screen, PANEL_COLOR, (0, 0, WINDOW_SIZE[0], 60))
@@ -120,7 +127,8 @@ def draw_state(
 
     current_label = player_labels[state.current_player]
     player_text = " | ".join(
-        f"P{index + 1}: {label}" for index, label in enumerate(player_labels)
+        f"P{index + 1}: {label} (Farbe: {player_color_names[index]})"
+        for index, label in enumerate(player_labels)
     )
     player_line = small_font.render(player_text, True, TEXT_COLOR)
     screen.blit(player_line, (20, 6))
@@ -232,6 +240,12 @@ def main() -> None:
     player_labels = [
         "AI (MCTS)" if kind == "ai" else "Random" for kind in player_kinds
     ]
+    player_color_names = [
+        PLAYER_COLOR_NAMES[index % len(PLAYER_COLOR_NAMES)]
+        if PLAYER_COLOR_NAMES
+        else f"RGB{PLAYER_COLORS[index % len(PLAYER_COLORS)]}"
+        for index in range(env.num_players)
+    ]
 
     while running:
         dt = clock.tick(60) / 1000.0
@@ -287,6 +301,7 @@ def main() -> None:
             last_action,
             paused,
             player_labels,
+            player_color_names,
         )
         pygame.display.flip()
 
