@@ -15,6 +15,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train the policy/value network.")
     parser.add_argument("--data", type=str, required=True)
     parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--learning-rate", type=float, default=2e-3)
     parser.add_argument("--output", type=str, default="data/model.pt")
     args = parser.parse_args()
 
@@ -29,7 +31,13 @@ def main() -> None:
     )
     network = PolicyValueNet(input_dim=input_dim, action_dim=action_dim)
     dataset = build_dataset(samples)
-    metrics = train_network(network, dataset, epochs=args.epochs)
+    metrics = train_network(
+        network,
+        dataset,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+    )
 
     network.eval()
     network.cpu()
