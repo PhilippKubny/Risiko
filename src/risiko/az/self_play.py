@@ -24,7 +24,12 @@ class SelfPlaySample:
 class SelfPlayConfig:
     num_simulations: int = 96
     temperature: float = 1.0
+    temperature_decay: float = 0.97
+    min_temperature: float = 0.25
     max_moves: int = 400
+    c_puct: float = 1.5
+    dirichlet_alpha: float = 0.3
+    dirichlet_frac: float = 0.25
 
 
 class SelfPlayRunner:
@@ -45,6 +50,7 @@ class SelfPlayRunner:
         game_history: List[Dict[str, object]] = []
         done = False
         moves = 0
+        temperature = self.config.temperature
         random_players = random_players or set()
 
         while not done and moves < self.config.max_moves:
@@ -56,10 +62,13 @@ class SelfPlayRunner:
                     self.network,
                     action_space=self.action_space,
                     num_simulations=self.config.num_simulations,
+                    c_puct=self.config.c_puct,
+                    dirichlet_alpha=self.config.dirichlet_alpha,
+                    dirichlet_frac=self.config.dirichlet_frac,
                     num_players=self.env.num_players,
                     max_turns=self.env.max_turns,
                 )
-                action_index = self._sample_action(policy)
+                action_index = self._sample_action(policy, temperature)
                 game_history.append(
                     {
                         "state": state_encode(state, self.env.num_players).tolist(),
@@ -72,6 +81,9 @@ class SelfPlayRunner:
             state = step.state
             done = step.done
             moves += 1
+            temperature = max(
+                self.config.min_temperature, temperature * self.config.temperature_decay
+            )
 
         winner = None
         if done and "winner" in step.info:
@@ -92,15 +104,15 @@ class SelfPlayRunner:
             )
         return samples
 
-    def _sample_action(self, policy: np.ndarray) -> int:
-        if self.config.temperature <= 0.0:
+    def _sample_action(self, policy: np.ndarray, temperature: float) -> int:
+        if temperature <= 0.0:
             return int(np.argmax(policy))
-        scaled = np.power(policy, 1.0 / self.config.temperature)
+        scaled = np.power(policy, 1.0 / temperature)
         if scaled.sum() == 0:
             scaled = np.ones_like(scaled) / len(scaled)
         else:
             scaled = scaled / scaled.sum()
-        return int(np.random.choice(len(policy), p=scaled))
+        return int(self.rng.choice(len(policy), p=scaled))
 
     def _sample_random_action(self, state: GameState) -> int:
         legal_indices = self._legal_action_indices(state)

@@ -35,7 +35,8 @@ pip install -e .
 Run self-play to generate data:
 
 ```bash
-python scripts/run_self_play.py --games 4 --output data/self_play.jsonl
+python scripts/run_self_play.py --games 8 --output data/self_play.jsonl --mcts-sims 128 \
+  --temperature 1.0 --temperature-decay 0.97 --min-temperature 0.25
 ```
 
 Control which players act randomly during self-play:
@@ -83,7 +84,16 @@ Hotkeys while the GUI is running:
 Train a small model on the generated data:
 
 ```bash
-python scripts/train.py --data data/self_play.jsonl --epochs 3 --output data/model.pt
+python scripts/train.py --data data/self_play.jsonl --epochs 4 --batch-size 64 \
+  --learning-rate 0.002 --output data/model.pt
+```
+
+Run an iterative self-play training loop with a replay buffer (recommended for gradual gains):
+
+```bash
+python scripts/run_training_loop.py --iterations 6 --games-per-iteration 8 \
+  --buffer-size 5000 --mcts-sims 128 --temperature 1.0 --temperature-decay 0.97 \
+  --min-temperature 0.25 --output-dir data/training
 ```
 
 ## Design notes

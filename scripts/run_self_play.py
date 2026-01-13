@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 
 from risiko.az.network import PolicyValueNet
-from risiko.az.self_play import SelfPlayRunner
+from risiko.az.self_play import SelfPlayConfig, SelfPlayRunner
 from risiko.game.env import RiskEnv
 from risiko.game.map import TERRITORIES
 from risiko.utils.serialization import save_samples
@@ -37,6 +37,14 @@ def main() -> None:
         default="1",
         help="Comma-separated 0-based player indices that act randomly (or 'all').",
     )
+    parser.add_argument("--mcts-sims", type=int, default=128)
+    parser.add_argument("--mcts-cpuct", type=float, default=1.5)
+    parser.add_argument("--dirichlet-alpha", type=float, default=0.3)
+    parser.add_argument("--dirichlet-frac", type=float, default=0.25)
+    parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument("--temperature-decay", type=float, default=0.97)
+    parser.add_argument("--min-temperature", type=float, default=0.25)
+    parser.add_argument("--max-moves", type=int, default=400)
     args = parser.parse_args()
 
     env = RiskEnv()
@@ -48,7 +56,17 @@ def main() -> None:
         + env.num_players
     )
     network = PolicyValueNet(input_dim=input_dim, action_dim=action_dim)
-    runner = SelfPlayRunner(network=network, env=env)
+    config = SelfPlayConfig(
+        num_simulations=args.mcts_sims,
+        temperature=args.temperature,
+        temperature_decay=args.temperature_decay,
+        min_temperature=args.min_temperature,
+        max_moves=args.max_moves,
+        c_puct=args.mcts_cpuct,
+        dirichlet_alpha=args.dirichlet_alpha,
+        dirichlet_frac=args.dirichlet_frac,
+    )
+    runner = SelfPlayRunner(network=network, env=env, config=config)
     random_players = parse_random_players(args.random_players, env.num_players)
 
     all_samples = []
