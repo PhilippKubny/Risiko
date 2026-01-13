@@ -45,7 +45,7 @@ def run_mcts(
         search_path: List[Tuple[Node, int]] = []
 
         while True:
-            action_index = _select_action(node, c_puct)
+            action_index = _select_action(node, action_space, num_players, c_puct)
             search_path.append((node, action_index))
             if action_index in node.children:
                 node = node.children[action_index]
@@ -104,7 +104,7 @@ def _expand(
         policy = legal_mask / legal_mask.sum()
     else:
         policy = policy / policy.sum()
-    value = float(output.value.squeeze(0).cpu().numpy())
+    value = output.value.squeeze().item()
     node = Node(
         state=state.clone(),
         prior=policy,
@@ -114,11 +114,24 @@ def _expand(
     return node, value
 
 
-def _select_action(node: Node, c_puct: float) -> int:
+def _select_action(
+    node: Node,
+    action_space: ActionSpace,
+    num_players: int,
+    c_puct: float,
+) -> int:
     total_visits = node.visit_count.sum() + 1.0
     q = node.q_values()
     u = c_puct * node.prior * np.sqrt(total_visits) / (1.0 + node.visit_count)
     scores = q + u
+    legal_mask = np.array(
+        [
+            1.0 if is_action_legal(node.state, action, num_players) else 0.0
+            for action in action_space.all_actions()
+        ],
+        dtype=np.float32,
+    )
+    scores = np.where(legal_mask > 0, scores, -np.inf)
     return int(np.argmax(scores))
 
 
