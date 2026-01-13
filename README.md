@@ -45,6 +45,10 @@ pip install -e ".[gui]"
 python scripts/run_gui.py --delay 0.8
 ```
 
+> **Windows note:** Python 3.13 users will get `pygame-ce` automatically because `pygame` does not publish official
+> wheels for 3.13 yet. If you prefer `pygame`, use Python 3.12 or install the required build tools per
+> https://www.pygame.org/wiki/CompileWindows.
+
 Train a small model on the generated data:
 
 ```bash
