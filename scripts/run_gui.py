@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import argparse
 import random
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
+import numpy as np
 import pygame
+import torch
 
+from risiko.az.mcts import run_mcts
+from risiko.az.network import PolicyValueNet
 from risiko.game.env import RiskEnv
 from risiko.game.map import ADJACENCY, TERRITORIES
 
@@ -84,6 +88,7 @@ def draw_state(
     positions: Dict[int, Tuple[int, int]],
     last_action: str,
     paused: bool,
+    player_labels: List[str],
 ) -> None:
     screen.fill(BACKGROUND_COLOR)
     pygame.draw.rect(screen, PANEL_COLOR, (0, 0, WINDOW_SIZE[0], 60))
@@ -113,16 +118,23 @@ def draw_state(
         name_rect = name_surf.get_rect(midtop=(pos[0], pos[1] + 40))
         screen.blit(name_surf, name_rect)
 
+    current_label = player_labels[state.current_player]
+    player_text = " | ".join(
+        f"P{index + 1}: {label}" for index, label in enumerate(player_labels)
+    )
+    player_line = small_font.render(player_text, True, TEXT_COLOR)
+    screen.blit(player_line, (20, 6))
+
     header_text = (
-        f"Turn {state.turn} | Player {state.current_player + 1} | "
+        f"Turn {state.turn} | Player {state.current_player + 1} ({current_label}) | "
         f"Phase: {state.phase} | Reinforcements: {state.reinforcements}"
     )
     header = small_font.render(header_text, True, TEXT_COLOR)
-    screen.blit(header, (20, 18))
+    screen.blit(header, (20, 24))
 
     action_text = f"Last action: {last_action}" if last_action else "Last action: -"
     action = small_font.render(action_text, True, TEXT_COLOR)
-    screen.blit(action, (20, 36))
+    screen.blit(action, (20, 42))
 
     if paused:
         paused_surf = font.render("PAUSED", True, (255, 200, 80))
@@ -148,16 +160,61 @@ def format_action(action) -> str:
     return "end phase"
 
 
+def parse_player_kinds(raw_value: str) -> List[str]:
+    kinds = [value.strip().lower() for value in raw_value.split(",") if value.strip()]
+    if not kinds:
+        raise ValueError("At least one player type must be provided.")
+    allowed = {"random", "ai"}
+    for kind in kinds:
+        if kind not in allowed:
+            raise ValueError(f"Unknown player type '{kind}'. Use: {', '.join(sorted(allowed))}.")
+    return kinds
+
+
+def build_network(num_players: int, action_dim: int) -> PolicyValueNet:
+    input_dim = (
+        num_players * len(TERRITORIES)
+        + len(TERRITORIES)
+        + 3
+        + num_players
+    )
+    return PolicyValueNet(input_dim=input_dim, action_dim=action_dim)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a live GUI for the Risiko env.")
     parser.add_argument("--delay", type=float, default=0.8, help="Seconds between moves.")
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--auto-reset", action="store_true", help="Restart after a win.")
+    parser.add_argument(
+        "--players",
+        type=str,
+        default="random,random",
+        help="Comma-separated player types: random or ai.",
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Optional path to a trained model for ai players.",
+    )
+    parser.add_argument("--mcts-sims", type=int, default=96)
+    parser.add_argument("--mcts-cpuct", type=float, default=1.5)
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
-    env = RiskEnv(seed=args.seed)
+    player_kinds = parse_player_kinds(args.players)
+    env = RiskEnv(num_players=len(player_kinds), seed=args.seed)
     env.reset()
+
+    action_space = env.action_space
+    network = None
+    if "ai" in player_kinds:
+        network = build_network(env.num_players, action_space.size)
+        if args.model:
+            state_dict = torch.load(args.model, map_location="cpu")
+            network.load_state_dict(state_dict)
+        network.eval()
 
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
@@ -172,6 +229,9 @@ def main() -> None:
     step_requested = False
     elapsed = 0.0
     running = True
+    player_labels = [
+        "AI (MCTS)" if kind == "ai" else "Random" for kind in player_kinds
+    ]
 
     while running:
         dt = clock.tick(60) / 1000.0
@@ -197,14 +257,37 @@ def main() -> None:
             step_requested = False
             legal_indices = env.legal_action_indices()
             if legal_indices:
-                action = env.action_space.all_actions()[rng.choice(legal_indices)]
+                current_kind = player_kinds[env.state.current_player]
+                if current_kind == "ai" and network is not None:
+                    policy, _ = run_mcts(
+                        env.state,
+                        network,
+                        action_space=action_space,
+                        num_simulations=args.mcts_sims,
+                        c_puct=args.mcts_cpuct,
+                        num_players=env.num_players,
+                        max_turns=env.max_turns,
+                    )
+                    action_index = int(np.argmax(policy))
+                else:
+                    action_index = rng.choice(legal_indices)
+                action = action_space.all_actions()[action_index]
                 last_action = format_action(action)
                 result = env.step(action)
                 if result.done and args.auto_reset:
                     env.reset()
                     last_action = "auto reset"
 
-        draw_state(screen, font, small_font, env, positions, last_action, paused)
+        draw_state(
+            screen,
+            font,
+            small_font,
+            env,
+            positions,
+            last_action,
+            paused,
+            player_labels,
+        )
         pygame.display.flip()
 
     pygame.quit()
