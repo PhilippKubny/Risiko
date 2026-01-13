@@ -219,7 +219,16 @@ def draw_top_bar(
     screen.blit(surf, (10, 10))
 
     random_player = next(name for name in env.players if name != model_player)
-    role_text = f"AI: {model_player}   Random: {random_player}"
+    player_color_names = {
+        "Lila": "lila",
+        "Rot": "rot",
+    }
+    model_color = player_color_names.get(model_player, "unbekannt")
+    random_color = player_color_names.get(random_player, "unbekannt")
+    role_text = (
+        f"AI: {model_player} (Farbe: {model_color})   "
+        f"Random: {random_player} (Farbe: {random_color})"
+    )
     role_surf = small_font.render(role_text, True, TEXT_COLOR)
     screen.blit(role_surf, (10, 34))
 
