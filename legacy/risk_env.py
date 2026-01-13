@@ -141,6 +141,12 @@ class RiskEnv:
         if winner_idx is not None:
             done = True
             info["winner"] = self.players[winner_idx]
+        else:
+            unique_owners = np.unique(s.owners)
+            if len(unique_owners) == 1 and unique_owners[0] >= 0:
+                winner_idx = int(unique_owners[0])
+                done = True
+                info["winner"] = self.players[winner_idx]
 
         # Optional: Max-Steps
         if not done and s.step_count >= s.max_steps:
