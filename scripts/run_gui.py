@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import math
 import random
 from typing import Dict, Tuple
 
@@ -11,7 +10,7 @@ from risiko.game.env import RiskEnv
 from risiko.game.map import ADJACENCY, TERRITORIES
 
 
-WINDOW_SIZE = (900, 600)
+WINDOW_SIZE = (1400, 820)
 BACKGROUND_COLOR = (28, 30, 36)
 EDGE_COLOR = (80, 90, 110)
 TEXT_COLOR = (240, 240, 240)
@@ -24,15 +23,57 @@ PLAYER_COLORS = [
 ]
 
 
-def build_positions(center: Tuple[int, int], radius: int) -> Dict[int, Tuple[int, int]]:
-    positions: Dict[int, Tuple[int, int]] = {}
-    count = len(TERRITORIES)
-    for idx in range(count):
-        angle = (2 * math.pi / count) * idx - math.pi / 2
-        x = center[0] + int(math.cos(angle) * radius)
-        y = center[1] + int(math.sin(angle) * radius)
-        positions[idx] = (x, y)
-    return positions
+def build_positions() -> Dict[int, Tuple[int, int]]:
+    return {
+        # Nordamerika (0–8)
+        0: (140, 220),  # Alaska
+        1: (250, 210),  # Nordwest-Territorium
+        2: (410, 150),  # Grönland
+        3: (230, 280),  # Alberta
+        4: (320, 270),  # Ontario
+        5: (430, 260),  # Quebec
+        6: (230, 345),  # Weststaaten
+        7: (320, 345),  # Oststaaten
+        8: (280, 430),  # Mittelamerika
+        # Südamerika (9–12)
+        9: (330, 520),  # Venezuela
+        10: (330, 595),  # Peru
+        11: (420, 580),  # Brasilien
+        12: (355, 670),  # Argentinien
+        # Europa (13–19)
+        13: (560, 190),  # Island
+        14: (620, 270),  # Großbritannien
+        15: (700, 220),  # Skandinavien
+        16: (640, 335),  # Westeuropa
+        17: (690, 280),  # Mitteleuropa
+        18: (735, 360),  # Südeuropa
+        19: (820, 300),  # Ukraine
+        # Afrika (20–25)
+        20: (660, 480),  # Nordafrika
+        21: (755, 450),  # Ägypten
+        22: (835, 525),  # Ostafrika
+        23: (690, 565),  # Zentralafrika
+        24: (720, 655),  # Südafrika
+        25: (880, 635),  # Madagaskar
+        # Asien (26–37)
+        26: (915, 260),  # Ural
+        27: (1015, 230),  # Sibirien
+        28: (1120, 170),  # Jakutien
+        29: (1210, 230),  # Irkutsk
+        30: (1320, 240),  # Kamtschatka
+        31: (1130, 310),  # Mongolei
+        32: (1320, 320),  # Japan
+        33: (1030, 330),  # China
+        34: (900, 390),  # Mittlerer Osten
+        35: (1000, 400),  # Indien
+        36: (1110, 420),  # Siam
+        37: (930, 320),  # Afghanistan
+        # Australien (38–41)
+        38: (1030, 560),  # Indonesien
+        39: (1150, 550),  # Neu-Guinea
+        40: (1070, 660),  # West-Australien
+        41: (1190, 670),  # Ost-Australien
+    }
 
 
 def draw_state(
@@ -125,7 +166,7 @@ def main() -> None:
     small_font = pygame.font.SysFont("arial", 18)
     clock = pygame.time.Clock()
 
-    positions = build_positions((WINDOW_SIZE[0] // 2, WINDOW_SIZE[1] // 2 + 30), 200)
+    positions = build_positions()
     last_action = ""
     paused = False
     step_requested = False
