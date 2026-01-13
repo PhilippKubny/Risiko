@@ -45,6 +45,24 @@ pip install -e ".[gui]"
 python scripts/run_gui.py --delay 0.8
 ```
 
+Use AI vs random (MCTS + policy/value network) in the GUI:
+
+```bash
+python scripts/run_gui.py --players ai,random --delay 0.6
+```
+
+Load a trained model for AI players:
+
+```bash
+python scripts/run_gui.py --players ai,random --model checkpoints/policy_value.pt
+```
+
+Hotkeys while the GUI is running:
+
+- **Space**: pause/resume
+- **N**: step one move (while paused)
+- **R**: reset the game
+
 > **Windows note:** Python 3.13 users will get `pygame-ce` automatically because `pygame` does not publish official
 > wheels for 3.13 yet. If you prefer `pygame`, use Python 3.12 or install the required build tools per
 > https://www.pygame.org/wiki/CompileWindows.
