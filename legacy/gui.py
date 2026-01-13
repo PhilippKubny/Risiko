@@ -196,7 +196,16 @@ def compute_stats(env: RiskEnv) -> Dict[str, int]:
 # Drawing
 # ---------------------------------------------------------
 
-def draw_top_bar(screen, font, env: RiskEnv, episode: int, lila_wins: int, games_played: int):
+def draw_top_bar(
+    screen,
+    font,
+    small_font,
+    env: RiskEnv,
+    episode: int,
+    lila_wins: int,
+    games_played: int,
+    model_player: str,
+):
     pygame.draw.rect(screen, TOP_BAR_COLOR, (0, 0, WINDOW_WIDTH, TOP_BAR_HEIGHT))
 
     s = env.state
@@ -208,6 +217,11 @@ def draw_top_bar(screen, font, env: RiskEnv, episode: int, lila_wins: int, games
     text_left = f"Step: {step}   Player: {current_player}   Phase: {phase}"
     surf = font.render(text_left, True, TEXT_COLOR)
     screen.blit(surf, (10, 10))
+
+    random_player = next(name for name in env.players if name != model_player)
+    role_text = f"AI: {model_player}   Random: {random_player}"
+    role_surf = small_font.render(role_text, True, TEXT_COLOR)
+    screen.blit(role_surf, (10, 34))
 
     winrate = 0.0 if games_played == 0 else lila_wins / games_played
     text_right = f"Episode: {episode}   Lila Winrate: {winrate:.2f}"
@@ -385,7 +399,16 @@ def main():
 
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
-            draw_top_bar(screen, font, env, episode, lila_wins, games_played)
+            draw_top_bar(
+                screen,
+                font,
+                small_font,
+                env,
+                episode,
+                lila_wins,
+                games_played,
+                model_player,
+            )
             draw_bottom_bar(screen, font, env, model_player)
             pygame.display.flip()
             clock.tick(FPS)
@@ -417,7 +440,16 @@ def main():
 
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
-            draw_top_bar(screen, font, env, episode, lila_wins, games_played)
+            draw_top_bar(
+                screen,
+                font,
+                small_font,
+                env,
+                episode,
+                lila_wins,
+                games_played,
+                model_player,
+            )
             draw_bottom_bar(screen, font, env, model_player)
             pygame.display.flip()
             clock.tick(FPS)
@@ -437,7 +469,16 @@ def main():
 
             screen.fill(BG_COLOR)
             draw_world(screen, small_font, env)
-            draw_top_bar(screen, font, env, episode, lila_wins, games_played)
+            draw_top_bar(
+                screen,
+                font,
+                small_font,
+                env,
+                episode,
+                lila_wins,
+                games_played,
+                model_player,
+            )
             draw_bottom_bar(screen, font, env, model_player)
 
             winner_text = f"Winner: {winner}" if winner is not None else "Winner: None"
