@@ -51,6 +51,13 @@ def step_state(
     done = False
     info: Dict[str, object] = {}
 
+    winner = _check_winner(state, num_players)
+    if winner is not None:
+        done = True
+        reward = 1.0 if winner == state.current_player else -1.0
+        info["winner"] = winner
+        return state, reward, done, info
+
     if not is_action_legal(state, action, num_players):
         raise ValueError(f"Illegal action {action}")
 
