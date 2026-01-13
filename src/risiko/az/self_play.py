@@ -8,6 +8,7 @@ import torch
 
 from risiko.game.actions import ActionSpace, build_action_space
 from risiko.game.env import RiskEnv
+from risiko.game.rules import is_action_legal
 from risiko.game.state import GameState
 from .mcts import run_mcts, state_encode
 
@@ -37,31 +38,36 @@ class SelfPlayRunner:
         self.env = env
         self.config = config or SelfPlayConfig()
         self.action_space: ActionSpace = env.action_space or build_action_space()
+        self.rng = np.random.default_rng()
 
-    def play_game(self) -> List[SelfPlaySample]:
+    def play_game(self, random_players: set[int] | None = None) -> List[SelfPlaySample]:
         state = self.env.reset()
         game_history: List[Dict[str, object]] = []
         done = False
         moves = 0
+        random_players = random_players or set()
 
         while not done and moves < self.config.max_moves:
-            policy, _ = run_mcts(
-                state,
-                self.network,
-                action_space=self.action_space,
-                num_simulations=self.config.num_simulations,
-                num_players=self.env.num_players,
-                max_turns=self.env.max_turns,
-            )
-            action_index = self._sample_action(policy)
+            if state.current_player in random_players:
+                action_index = self._sample_random_action(state)
+            else:
+                policy, _ = run_mcts(
+                    state,
+                    self.network,
+                    action_space=self.action_space,
+                    num_simulations=self.config.num_simulations,
+                    num_players=self.env.num_players,
+                    max_turns=self.env.max_turns,
+                )
+                action_index = self._sample_action(policy)
+                game_history.append(
+                    {
+                        "state": state_encode(state, self.env.num_players).tolist(),
+                        "policy": policy.tolist(),
+                        "player": state.current_player,
+                    }
+                )
             action = self.action_space.all_actions()[action_index]
-            game_history.append(
-                {
-                    "state": state_encode(state, self.env.num_players).tolist(),
-                    "policy": policy.tolist(),
-                    "player": state.current_player,
-                }
-            )
             step = self.env.step(action)
             state = step.state
             done = step.done
@@ -95,3 +101,16 @@ class SelfPlayRunner:
         else:
             scaled = scaled / scaled.sum()
         return int(np.random.choice(len(policy), p=scaled))
+
+    def _sample_random_action(self, state: GameState) -> int:
+        legal_indices = self._legal_action_indices(state)
+        return int(self.rng.choice(legal_indices))
+
+    def _legal_action_indices(self, state: GameState) -> List[int]:
+        indices: List[int] = []
+        for idx, action in enumerate(self.action_space.all_actions()):
+            if is_action_legal(state, action, self.env.num_players):
+                indices.append(idx)
+        if not indices:
+            raise RuntimeError("No legal actions available for random player.")
+        return indices
