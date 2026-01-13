@@ -104,7 +104,7 @@ def _expand(
         policy = legal_mask / legal_mask.sum()
     else:
         policy = policy / policy.sum()
-    value = float(output.value.squeeze(0).cpu().numpy())
+    value = output.value.squeeze().item()
     node = Node(
         state=state.clone(),
         prior=policy,
@@ -119,6 +119,7 @@ def _select_action(node: Node, c_puct: float) -> int:
     q = node.q_values()
     u = c_puct * node.prior * np.sqrt(total_visits) / (1.0 + node.visit_count)
     scores = q + u
+    scores = np.where(node.prior > 0, scores, -np.inf)
     return int(np.argmax(scores))
 
 
